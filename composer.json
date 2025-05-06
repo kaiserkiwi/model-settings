@@ -1,0 +1,38 @@
+{
+	"name": "kaiserkiwi/model-settings",
+	"description": "A simple way to manage settings in your Laravel models.",
+	"keywords": [
+		"laravel",
+		"settings",
+		"model",
+		"configuration"
+	],
+	"homepage": "https://github.com/kaiserkiwi/model-settings",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Marco Kaiser",
+			"email": "marco@kaiser.kiwi"
+		}
+	],
+	"require": {
+		"php": "^8.0",
+		"illuminate/database": "^11.0|^12.0",
+		"illuminate/support": "^11.0|^12.0"
+	},
+	"require-dev": {
+		"hyperlinkgroup/pint": "^1.13"
+	},
+	"extra": {
+		"laravel": {
+			"providers": [
+				"Kaiserkiwi\\ModelSettings\\ServiceProvider"
+			]
+		}
+	},
+	"autoload": {
+		"psr-4": {
+			"Kaiserkiwi\\ModelSettings\\": "src/"
+		}
+	}
+}

@@ -1,0 +1,8 @@
+/.phpunit.cache
+/vendor
+/.fleet
+/.idea
+/.vscode
+
+.phpstorm.meta.php
+.DS_Store
