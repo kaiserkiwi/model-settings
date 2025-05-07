@@ -61,6 +61,27 @@ $user = User::find(1);
 $theme = $user->getSetting('theme');
 ```
 
+If the setting does not exist, you can provide a default value that will be returned instead:
+```php
+$user = User::find(1);
+$theme = $user->getSetting('theme', 'light');
+```
+
+### Push a setting
+You can push a setting by calling the `pushSetting` method on your model instance. This will append the value to the existing setting that is an array. For example:
+```php
+$user = User::find(1);
+$user->pushSetting('notifications', 'email');
+```
+
+If the setting does not have an array value the method throws an exception. If for whatever reason you want convert the existing value to an array and append a value you can use the third $force parameter:
+```php
+$user = User::find(1);
+$user->pushSetting('notifications', 'email', true);
+```
+
+So if the setting is a string, it will be converted to an array and the value will be appended. If the setting is not set at all, it will be created as an array with the value.
+
 ### Deleting a setting
 You can delete a setting by calling the `deleteSetting` method on your model instance. For example:
 ```php
