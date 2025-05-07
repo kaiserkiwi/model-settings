@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ModelSettings extends Model
 {
-	public function getTable()
+	public function getTable(): string
 	{
 		return config('model_settings.table', 'model_settings');
 	}
