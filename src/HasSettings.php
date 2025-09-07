@@ -16,10 +16,21 @@ trait HasSettings
 
 	/**
 	 * Get all settings for the model.
-	 */
+	{
+		/**
+		 * Simple in-memory cache for settings.
+		 */
+		private array $settingsCache = [];
 	public function getSettings(): Collection
 	{
-		return $this->settings()->get();
+		// Use cache if available
+		if (!empty($this->settingsCache)) {
+			return collect($this->settingsCache);
+		}
+		$settings = $this->settings()->get();
+		// Fill cache
+		$this->settingsCache = $settings->all();
+		return $settings;
 	}
 
 	/**
@@ -30,8 +41,16 @@ trait HasSettings
 	 */
 	public function getSetting(string $key, mixed $default = null): mixed
 	{
+		// Use cache if available
+		if (!empty($this->settingsCache)) {
+			foreach ($this->settingsCache as $record) {
+				if ($record->key === $key) {
+					return $record->value;
+				}
+			}
+			return $default;
+		}
 		$record = $this->settings()->firstWhere('key', $key);
-
 		return $record ? $record->value : $default;
 	}
 
@@ -47,6 +66,8 @@ trait HasSettings
 			['key' => $key],
 			['value' => $value]
 		);
+		// Invalidate cache
+		$this->settingsCache = [];
 	}
 
 	/**
@@ -64,7 +85,7 @@ trait HasSettings
 
 		if (is_null($currentValue)) {
 			$this->setSetting($key, [$value]);
-
+			$this->settingsCache = [];
 			return;
 		}
 
@@ -72,13 +93,12 @@ trait HasSettings
 			if (! $force) {
 				throw new RuntimeException(sprintf("Cannot push to a non-array setting '%s'.", $key));
 			}
-
 			$currentValue = [$currentValue];
 		}
 
 		$currentValue[] = $value;
-
 		$this->setSetting($key, $currentValue);
+		$this->settingsCache = [];
 	}
 
 	/**
@@ -88,6 +108,8 @@ trait HasSettings
 	 */
 	public function removeSetting(string $key): void
 	{
-		$this->settings()->where('key', $key)->delete();
+	$this->settings()->where('key', $key)->delete();
+	// Invalidate cache
+	$this->settingsCache = [];
 	}
 }
