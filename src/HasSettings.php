@@ -4,6 +4,7 @@ namespace Kaiserkiwi\ModelSettings;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Carbon;
 use Kaiserkiwi\ModelSettings\Models\ModelSettings;
 use RuntimeException;
 
@@ -19,7 +20,15 @@ trait HasSettings
 	 */
 	public function getSettings(): Collection
 	{
-		return $this->settings()->get();
+		if (! $this->isCachingEnabled()) {
+			return $this->settings()->get();
+		}
+
+		return cache()->remember(
+			$this->modelCacheKey(),
+			$this->cacheTtl(),
+			fn () => $this->settings()->get()
+		);
 	}
 
 	/**
@@ -30,9 +39,17 @@ trait HasSettings
 	 */
 	public function getSetting(string $key, mixed $default = null): mixed
 	{
-		$record = $this->settings()->firstWhere('key', $key);
+		if (! $this->isCachingEnabled()) {
+			$record = $this->settings()->firstWhere('key', $key);
 
-		return $record ? $record->value : $default;
+			return $record ? $record->value : $default;
+		}
+
+		return cache()->remember(
+			$this->settingCacheKey($key),
+			$this->cacheTtl(),
+			fn () => optional($this->settings()->firstWhere('key', $key))->value ?? $default
+		);
 	}
 
 	/**
@@ -47,6 +64,8 @@ trait HasSettings
 			['key' => $key],
 			['value' => $value]
 		);
+
+		$this->invalidateSettingCaches($key, $value);
 	}
 
 	/**
@@ -89,5 +108,84 @@ trait HasSettings
 	public function removeSetting(string $key): void
 	{
 		$this->settings()->where('key', $key)->delete();
+		$this->invalidateSettingCaches($key);
+	}
+
+	/**
+	 * Invalidate the caches for a specific setting and the model's settings.
+	 * If a value is provided, the key will be written back to the cache with the new value.
+	 *
+	 * @param  string  $key  The key of the setting to invalidate.
+	 * @param  mixed|null  $value  The value of the setting (optional).
+	 */
+	private function invalidateSettingCaches(string $key, mixed $value = null): void
+	{
+		if (! $this->isCachingEnabled()) {
+			return;
+		}
+
+		cache()->forget($this->settingCacheKey($key));
+
+		// Re-cache all settings
+		cache()->put(
+			$this->modelCacheKey(),
+			$this->settings()->get(),
+			$this->cacheTtl(),
+		);
+
+		if (! blank($value)) {
+			cache()->put(
+				$this->settingCacheKey($key),
+				$value,
+				$this->cacheTtl()
+			);
+		}
+	}
+
+	/**
+	 * Check if caching is enabled for model settings.
+	 */
+	private function isCachingEnabled(): bool
+	{
+		return (bool) config('model_settings.caching.enabled', false);
+	}
+
+	/**
+	 * Get the cache key for the model's settings.
+	 */
+	private function modelCacheKey(): string
+	{
+		return sprintf(
+			'%s:%s:%s',
+			$this->cachePrefix(),
+			$this->getMorphClass(),
+			$this->getKey(),
+		);
+	}
+
+	/**
+	 * Get the cache key for a specific setting of the model.
+	 *
+	 * @param  string  $key  The key of the setting.
+	 */
+	private function settingCacheKey(string $key): string
+	{
+		return $this->modelCacheKey() . ':' . $key;
+	}
+
+	/**
+	 * Get the cache key prefix.
+	 */
+	private function cachePrefix(): string
+	{
+		return (string) config('model_settings.caching.key_prefix', 'model_settings');
+	}
+
+	/**
+	 * Get the cache time-to-live (TTL).
+	 */
+	private function cacheTtl(): int|Carbon
+	{
+		return config('model_settings.caching.ttl', 60 * 60 * 24 * 30);
 	}
 }
