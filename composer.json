@@ -1,39 +1,54 @@
 {
-	"name": "kaiserkiwi/model-settings",
-	"version": "1.2.0",
-	"description": "A simple way to manage settings in your Laravel models.",
-	"keywords": [
-		"laravel",
-		"settings",
-		"model",
-		"configuration"
-	],
-	"homepage": "https://github.com/kaiserkiwi/model-settings",
-	"license": "MIT",
-	"authors": [
-		{
-			"name": "Marco Kaiser",
-			"email": "marco@kaiser.kiwi"
-		}
-	],
-	"require": {
-		"php": "^8.2",
-		"illuminate/database": "^11.0|^12.0|^13.0",
-		"illuminate/support": "^11.0|^12.0|^13.0"
-	},
-	"require-dev": {
-		"hyperlinkgroup/pint": "^1.27"
-	},
-	"extra": {
-		"laravel": {
-			"providers": [
-				"Kaiserkiwi\\ModelSettings\\ServiceProvider"
-			]
-		}
-	},
-	"autoload": {
-		"psr-4": {
-			"Kaiserkiwi\\ModelSettings\\": "src/"
-		}
-	}
+    "name": "kaiserkiwi/model-settings",
+    "version": "1.2.0",
+    "description": "A simple way to manage settings in your Laravel models.",
+    "keywords": [
+        "laravel",
+        "settings",
+        "model",
+        "configuration"
+    ],
+    "homepage": "https://github.com/kaiserkiwi/model-settings",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Marco Kaiser",
+            "email": "marco@kaiser.kiwi"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/database": "^11.0|^12.0|^13.0",
+        "illuminate/support": "^11.0|^12.0|^13.0"
+    },
+    "require-dev": {
+        "hyperlinkgroup/pint": "^1.27",
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "pestphp/pest": "^4.7"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Kaiserkiwi\\ModelSettings\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Kaiserkiwi\\ModelSettings\\ServiceProvider"
+            ]
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Kaiserkiwi\\ModelSettings\\": "src/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
 }
