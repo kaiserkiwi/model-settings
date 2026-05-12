@@ -48,6 +48,25 @@ describe('getSetting', function () {
 	});
 });
 
+describe('setSetting with caching', function () {
+	beforeEach(function () {
+		config(['model_settings.caching.enabled' => true]);
+	});
+
+	it('caches falsy-but-meaningful values so they survive a direct db delete', function ($value) {
+		$this->user->setSetting('flag', $value);
+
+		$this->user->settings()->where('key', 'flag')->delete();
+
+		expect($this->user->getSetting('flag'))->toBe($value);
+	})->with([
+		'integer zero' => [0],
+		'boolean false' => [false],
+		'string zero' => ['0'],
+		'empty string' => [''],
+	]);
+});
+
 describe('setSetting', function () {
 	it('creates a new setting', function () {
 		$this->user->setSetting('theme', 'dark');

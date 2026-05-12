@@ -152,7 +152,7 @@ trait HasSettings
 			$this->cacheTtl(),
 		);
 
-		if (! blank($value)) {
+		if (! is_null($value)) {
 			cache()->put(
 				$this->settingCacheKey($key),
 				$value,
