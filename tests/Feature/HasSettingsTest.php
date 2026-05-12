@@ -49,6 +49,57 @@ describe('getSetting', function () {
 	});
 });
 
+describe('getSetting with save_default and caching', function () {
+	beforeEach(function () {
+		config([
+			'model_settings.save_default' => true,
+			'model_settings.caching.enabled' => true,
+		]);
+	});
+
+	it('persists the default to the database and caches it', function () {
+		$value = $this->user->getSetting('theme', 'light');
+
+		expect($value)->toBe('light')
+			->and($this->user->settings()->firstWhere('key', 'theme'))->not->toBeNull();
+
+		// Delete from DB directly – cache must serve the value
+		$this->user->settings()->where('key', 'theme')->delete();
+
+		expect($this->user->getSetting('theme'))->toBe('light');
+	});
+
+	it('does not persist the default to the database when save_default is disabled', function () {
+		config(['model_settings.save_default' => false]);
+
+		$this->user->getSetting('theme', 'light');
+
+		expect($this->user->settings()->firstWhere('key', 'theme'))->toBeNull();
+	});
+
+	it('persists and caches falsy defaults correctly', function ($default) {
+		$value = $this->user->getSetting('flag', $default);
+
+		expect($value)->toBe($default)
+			->and($this->user->settings()->firstWhere('key', 'flag'))->not->toBeNull();
+
+		// Delete from DB – cache must still serve the falsy value
+		$this->user->settings()->where('key', 'flag')->delete();
+
+		expect($this->user->getSetting('flag'))->toBe($default);
+	})->with([
+		'boolean false' => [false],
+		'integer zero' => [0],
+		'string zero' => ['0'],
+	]);
+
+	it('does not persist or cache a null default', function () {
+		$this->user->getSetting('theme');
+
+		expect($this->user->settings()->firstWhere('key', 'theme'))->toBeNull();
+	});
+});
+
 describe('setSetting with caching', function () {
 	beforeEach(function () {
 		config(['model_settings.caching.enabled' => true]);
