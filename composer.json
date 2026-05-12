@@ -17,12 +17,12 @@
 		}
 	],
 	"require": {
-		"php": "^8.0",
-		"illuminate/database": "^11.0|^12.0",
-		"illuminate/support": "^11.0|^12.0"
+		"php": "^8.2",
+		"illuminate/database": "^11.0|^12.0|^13.0",
+		"illuminate/support": "^11.0|^12.0|^13.0"
 	},
 	"require-dev": {
-		"hyperlinkgroup/pint": "^1.13"
+		"hyperlinkgroup/pint": "^1.27"
 	},
 	"extra": {
 		"laravel": {
