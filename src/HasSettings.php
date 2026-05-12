@@ -4,6 +4,7 @@ namespace Kaiserkiwi\ModelSettings;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Kaiserkiwi\ModelSettings\Models\ModelSettings;
 use RuntimeException;
@@ -79,10 +80,16 @@ trait HasSettings
 	 */
 	public function setSetting(string $key, mixed $value): void
 	{
-		$this->settings()->updateOrCreate(
-			['key' => $key],
-			['value' => $value],
-		);
+		try {
+			$this->settings()->updateOrCreate(
+				['key' => $key],
+				['value' => $value],
+			);
+		} catch (QueryException) {
+			// A concurrent request already inserted this key (race on the unique constraint).
+			// Fall back to a plain update since the record now exists.
+			$this->settings()->where('key', $key)->update(['value' => $value]);
+		}
 
 		$this->invalidateSettingCaches($key, $value);
 	}

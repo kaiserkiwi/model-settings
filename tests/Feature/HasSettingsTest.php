@@ -1,5 +1,6 @@
 <?php
 
+use Kaiserkiwi\ModelSettings\Models\ModelSettings;
 use Kaiserkiwi\ModelSettings\Tests\Models\TestUser;
 
 beforeEach(function () {
@@ -76,6 +77,23 @@ describe('setSetting', function () {
 
 	it('updates an existing setting', function () {
 		$this->user->setSetting('theme', 'dark');
+		$this->user->setSetting('theme', 'light');
+
+		expect($this->user->getSetting('theme'))->toBe('light')
+			->and($this->user->settings()->where('key', 'theme')->count())->toBe(1);
+	});
+
+	it('handles a concurrent insert race by falling back to update', function () {
+		// Simulate Request A having already won the race and inserted the record
+		ModelSettings::create([
+			'settingable_type' => $this->user->getMorphClass(),
+			'settingable_id' => $this->user->getKey(),
+			'key' => 'theme',
+			'value' => json_encode('dark'),
+		]);
+
+		// Request B calls setSetting – updateOrCreate would hit the unique constraint.
+		// The catch block must fall back to update without throwing.
 		$this->user->setSetting('theme', 'light');
 
 		expect($this->user->getSetting('theme'))->toBe('light')
