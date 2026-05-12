@@ -4,6 +4,7 @@ namespace Kaiserkiwi\ModelSettings;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Kaiserkiwi\ModelSettings\Models\ModelSettings;
 use RuntimeException;
@@ -27,7 +28,7 @@ trait HasSettings
 		return cache()->remember(
 			$this->modelCacheKey(),
 			$this->cacheTtl(),
-			fn () => $this->settings()->get()
+			fn () => $this->settings()->get(),
 		);
 	}
 
@@ -40,16 +41,35 @@ trait HasSettings
 	public function getSetting(string $key, mixed $default = null): mixed
 	{
 		if (! $this->isCachingEnabled()) {
-			$record = $this->settings()->firstWhere('key', $key);
-
-			return $record ? $record->value : $default;
+			return $this->fetchSetting($key, $default);
 		}
 
 		return cache()->remember(
 			$this->settingCacheKey($key),
 			$this->cacheTtl(),
-			fn () => optional($this->settings()->firstWhere('key', $key))->value ?? $default
+			fn () => $this->fetchSetting($key, $default),
 		);
+	}
+
+	/**
+	 * Fetch a setting from the database, optionally persisting the default value.
+	 *
+	 * @param  string  $key  The key of the setting to fetch.
+	 * @param  mixed  $default  The default value to return (and optionally persist) if not found.
+	 */
+	private function fetchSetting(string $key, mixed $default): mixed
+	{
+		$record = $this->settings()->firstWhere('key', $key);
+
+		if (! $record) {
+			if ($this->isSaveDefaultEnabled() && ! is_null($default)) {
+				$this->setSetting($key, $default);
+			}
+
+			return $default;
+		}
+
+		return $record->value;
 	}
 
 	/**
@@ -60,10 +80,16 @@ trait HasSettings
 	 */
 	public function setSetting(string $key, mixed $value): void
 	{
-		$this->settings()->updateOrCreate(
-			['key' => $key],
-			['value' => $value]
-		);
+		try {
+			$this->settings()->updateOrCreate(
+				['key' => $key],
+				['value' => $value],
+			);
+		} catch (QueryException) {
+			// A concurrent request already inserted this key (race on the unique constraint).
+			// Fall back to a plain update since the record now exists.
+			$this->settings()->where('key', $key)->update(['value' => $value]);
+		}
 
 		$this->invalidateSettingCaches($key, $value);
 	}
@@ -133,13 +159,21 @@ trait HasSettings
 			$this->cacheTtl(),
 		);
 
-		if (! blank($value)) {
+		if (! is_null($value)) {
 			cache()->put(
 				$this->settingCacheKey($key),
 				$value,
-				$this->cacheTtl()
+				$this->cacheTtl(),
 			);
 		}
+	}
+
+	/**
+	 * Check if saving default values to the database is enabled.
+	 */
+	private function isSaveDefaultEnabled(): bool
+	{
+		return (bool) config('model_settings.save_default', false);
 	}
 
 	/**
