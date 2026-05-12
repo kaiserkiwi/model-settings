@@ -23,6 +23,7 @@ You can change the configuration via the following environment variables:
 | Variable                          | Description                                              | Default                       |
 |-----------------------------------|----------------------------------------------------------|-------------------------------|
 | `MODEL_SETTINGS_TABLE`            | The name of the table to store the model settings        | `model_settings`              |
+| `MODEL_SETTINGS_SAVE_DEFAULT`     | Whether to persist default values to the database        | `false`                       |
 | `MODEL_SETTINGS_CACHE_ENABLED`    | Whether to enable caching for model settings             | `false`                       |
 | `MODEL_SETTINGS_CACHE_TTL`        | The time to live for the model settings cache in seconds | `60 * 60 * 24 * 30` (30 days) |
 | `MODEL_SETTINGS_CACHE_KEY_PREFIX` | The prefix for the model settings cache key              | `model_settings`              |
@@ -84,6 +85,8 @@ If the setting does not exist, you can provide a default value that will be retu
 $user = User::find(1);
 $theme = $user->getSetting('theme', 'light');
 ```
+
+If `save_default` is enabled in the configuration (or via `MODEL_SETTINGS_SAVE_DEFAULT=true`), the default value will also be written to the database when the setting does not exist yet. This only applies when the default value is not `null`.
 
 ### Push a setting
 You can push a setting by calling the `pushSetting` method on your model instance. This will append the value to the existing setting that is an array. For example:
