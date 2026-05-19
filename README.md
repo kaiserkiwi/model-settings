@@ -1,5 +1,10 @@
 # Model Settings for Laravel
 
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/kaiserkiwi/model-settings.svg?style=flat-square)](https://packagist.org/packages/kaiserkiwi/model-settings)
+[![Tests](https://img.shields.io/github/actions/workflow/status/kaiserkiwi/model-settings/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/kaiserkiwi/model-settings/actions/workflows/tests.yml)
+[![Total Downloads](https://img.shields.io/packagist/dt/kaiserkiwi/model-settings.svg?style=flat-square)](https://packagist.org/packages/kaiserkiwi/model-settings)
+[![License](https://img.shields.io/packagist/l/kaiserkiwi/model-settings.svg?style=flat-square)](https://packagist.org/packages/kaiserkiwi/model-settings)
+
 This package provides a simple way to define model settings in Laravel applications, without anything fancy. Just simple settings. 
 
 The package comes with a `HasSettings` trait that can be added to any eloquent model and a migration that creates a `model_settings` (Name configurable) table to store the settings. The settings are stored as JSON in the database, so you can store any type of data you want. 
