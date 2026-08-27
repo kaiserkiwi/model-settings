@@ -29,6 +29,13 @@ jobs:
 
       - name: Install dependencies
         run: |
+          # Laravel 11 no longer receives security patches, so every one of its releases
+          # carries unfixed advisories and Composer refuses to resolve them at all. The
+          # package still supports Laravel 11, so the block is lifted for this job only -
+          # keeping it on for 12 and 13 means a future advisory there still gets noticed.
+          if [ "${{ matrix.laravel }}" = "11.*" ]; then
+            composer config policy.advisories.block false
+          fi
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
           composer update --prefer-dist --no-interaction
 
