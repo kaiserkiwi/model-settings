@@ -8,6 +8,11 @@ use Kaiserkiwi\ModelSettings\Tests\Models\TestGuest;
 use Kaiserkiwi\ModelSettings\Tests\Models\TestThing;
 use Kaiserkiwi\ModelSettings\Tests\Models\TestUser;
 
+afterEach(function () {
+	// Relation::$morphMap is static and survives the application rebuild between tests.
+	Relation::morphMap([], merge: false);
+});
+
 /**
  * Write a settings row directly, so an owner id that does not exist can be used.
  */
@@ -66,7 +71,7 @@ it('keeps settings whose type cannot be resolved', function () {
 });
 
 it('resolves a type through the morph map', function () {
-	Relation::enforceMorphMap(['test-user' => TestUser::class]);
+	Relation::morphMap(['test-user' => TestUser::class]);
 
 	$user = TestUser::create();
 	$living = settingRow('test-user', $user->id);
