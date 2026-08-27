@@ -3,6 +3,7 @@
 namespace Kaiserkiwi\ModelSettings;
 
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
+use Kaiserkiwi\ModelSettings\Commands\PruneOrphanedSettings;
 
 class ServiceProvider extends LaravelServiceProvider
 {
@@ -14,6 +15,10 @@ class ServiceProvider extends LaravelServiceProvider
 	public function boot(): void
 	{
 		if ($this->app->runningInConsole()) {
+			$this->commands([
+				PruneOrphanedSettings::class,
+			]);
+
 			$this->publishes([
 				__DIR__ . '/../config/model_settings.php' => config_path('model_settings.php'),
 			], 'config');

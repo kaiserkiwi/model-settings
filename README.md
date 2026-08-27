@@ -145,5 +145,39 @@ model_settings:App\Models\User:1:theme
 
 ---
 
+## Pruning orphaned settings
+Settings are stored polymorphically, which means the table cannot have a foreign key on its owner. Nothing removes a model's settings when the model itself is deleted, so they stay behind as orphaned rows. Model events are no help either: if your database deletes the model through a cascade, no event fires at all.
+
+The package ships a command for this, which you can run whenever you like:
+
+```bash
+php artisan model-settings:prune
+```
+
+To see what it would delete without deleting anything, use `--pretend`:
+
+```bash
+php artisan model-settings:prune --pretend
+```
+
+### Running it regularly
+The package deliberately does not schedule anything for you. If you want it to run on a schedule, add it in your own application, for example in `routes/console.php`:
+
+```php
+use Illuminate\Support\Facades\Schedule;
+
+Schedule::command('model-settings:prune')->daily();
+```
+
+### What counts as orphaned
+A setting is orphaned when no row with a matching primary key exists in the owner's table. A soft deleted owner therefore still counts as existing, because its row is still there. Only once it is really gone do its settings become orphaned.
+
+Two cases are reported and skipped rather than deleted, because deleting them would be a guess:
+
+* the `settingable_type` cannot be resolved to a model, for instance because it belongs to a feature that is not deployed in this installation
+* the owning model uses a different database connection than the settings table, which a single query cannot span
+
+---
+
 ## Support
-If you require any support you're welcome to open an issue on this GitHub repository.
+If you require any support you're welcome to open an issue on this GitHub repository or [contact me on Mastodon](https://corteximplant.com/@kaiserkiwi).

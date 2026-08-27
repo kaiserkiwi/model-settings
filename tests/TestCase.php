@@ -22,11 +22,30 @@ abstract class TestCase extends OrchestraTestCase
 			'database' => ':memory:',
 			'prefix' => '',
 		]);
+
+		// A second connection, so the prune command can be tested against an owner that
+		// does not live next to the settings table.
+		$app['config']->set('database.connections.secondary', [
+			'driver' => 'sqlite',
+			'database' => ':memory:',
+			'prefix' => '',
+		]);
 	}
 
 	protected function defineDatabaseMigrations(): void
 	{
 		Schema::create('test_users', function (Blueprint $table) {
+			$table->id();
+			$table->timestamps();
+		});
+
+		// Primary key deliberately not called "id".
+		Schema::create('test_things', function (Blueprint $table) {
+			$table->id('thing_id');
+			$table->timestamps();
+		});
+
+		Schema::connection('secondary')->create('test_guests', function (Blueprint $table) {
 			$table->id();
 			$table->timestamps();
 		});
